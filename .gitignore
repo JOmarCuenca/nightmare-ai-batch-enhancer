@@ -1,3 +1,18 @@
+# Repo
 env/
+__pycache__/
+
+# Secret
 
 *.key
+
+# images
+
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# Other
+
+output/
