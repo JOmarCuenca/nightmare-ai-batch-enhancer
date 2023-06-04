@@ -45,3 +45,15 @@ class TestFileManager(unittest.TestCase):
         extension = FileManager.getExtension("main.py")
         nextName = fm.getNextValidName(extension)
         self.assertEqual(next(nextName), "main_1.py")
+
+    def test_get_images_dirs(self):
+        fm = FileManager("tests/images")
+
+        imgFiles = fm.getImagesDirs()
+        
+        self.assertTrue("tests/images/example.jpeg" in imgFiles)
+        self.assertTrue("tests/images/example.jpg" in imgFiles)
+        self.assertTrue("tests/images/example.png" in imgFiles)
+        self.assertTrue("tests/images/example.webp" in imgFiles)
+        self.assertFalse("tests/images/example.sp" in imgFiles)
+        self.assertFalse("tests/images/example.txt" in imgFiles)
