@@ -9,10 +9,10 @@ MAX_SCALE = 10
 class Args:
     inputPath: str
     outputPath: str
+    apiKeyPath: str
     verbose: bool
     scale: int
     face_enhance: bool
-
 
     def getArgs():
         parser = ArgumentParser(
@@ -21,6 +21,7 @@ class Args:
         )
 
         parser.add_argument('input_path', type=str,)
+        parser.add_argument('--api_path', type=str, default="api.key",)
         parser.add_argument('--scale', type=int, default=4, dest="scale",
                             help="Scale factor for the AI model")
         parser.add_argument('--output', type=str, help="Output path",
@@ -35,6 +36,7 @@ class Args:
         return Args(
             args.input_path,
             args.output_path,
+            args.api_path,
             args.verbose,
             max(MIN_SCALE, min(MAX_SCALE, args.scale)),
             args.face_enhance,

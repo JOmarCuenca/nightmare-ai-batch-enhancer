@@ -12,6 +12,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["hello","--face-enhance", "--scale", "15", "-v"]
+        },
+        {
+            "name": "Main Program Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["examples", "--output", "dump", "--scale", "3", "-v"]
         }
     ]
 }

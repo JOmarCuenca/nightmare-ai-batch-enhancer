@@ -40,7 +40,7 @@ class FileManager:
                 path = f"{self.getName()}_{self.counter}{extension}"
 
             if (not os.path.exists(path)):
-                return path
+                yield path
             else:
                 self.counter += 1
 
