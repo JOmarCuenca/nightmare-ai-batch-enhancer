@@ -2,6 +2,7 @@ from replicate import Client
 from args import Args
 from fileManager import FileManager
 from requests import get
+from loguru import logger
 
 
 def __getKey(apiKeyPath: str):
@@ -38,9 +39,12 @@ def downloadImage(url: str, path: str):
 if __name__ == '__main__':
     from datetime import datetime
 
+
     args = Args.getArgs()
     inputFM = FileManager(args.inputPath)
     outputFM = FileManager(args.outputPath)
+
+    logger.add(f"logs/{datetime.now().strftime('%d-%m-%y_%H:%M:%S')}.log")
 
     imgs = inputFM.getImagesDirs()
     client = getClient(args.apiKeyPath)
@@ -48,27 +52,27 @@ if __name__ == '__main__':
     nameGenerator = outputFM.getNextValidName(
                     FileManager.getExtension("output.png"))
 
-    # Open the log file, which name is the current date
-    with open(f"logs/{datetime.now().strftime('%d-%m-%Y')}.log", "w") as log:
-        for img in imgs:
-            try:
-                log.write(f"Processing -> {img}\n")
+    for img in imgs:
+        try:
+            logger.debug(f"Processing -> {img}")
 
-                # Enhance the image
-                output = enhanceImage(
-                    client, img, args.scale, args.face_enhance)
+            # Enhance the image
+            # output = enhanceImage(
+            #     client, img, args.scale, args.face_enhance)
 
-                __validateUrl(output)
+            # __validateUrl(output)
 
-                outputFilePath = next(nameGenerator)
+            outputFilePath = next(nameGenerator)
 
-                # Save the enhanced image
-                downloadImage(output, outputFilePath)
+            # # Save the enhanced image
+            # downloadImage(output, outputFilePath)
 
-                log.write(f"Saved enhanced image to {outputFilePath}\n")
+            logger.debug(f"Saved enhanced image to {outputFilePath}")
 
-            except Exception as e:
-                # Log the failure
-                log.write(f"Failed to enhance {img} because of {e}\n")
+        except Exception as e:
+            # Log the failure
+            logger.error(f"Failed to enhance {img} because of {e}")
 
-            log.write(f" Finished processing {img} ".center(100, '-') + '\n')
+        logger.debug(f" Finished processing {img} ".center(100, '-') + '')
+
+    logger.info(f"Enhanced {len(imgs)} images")
