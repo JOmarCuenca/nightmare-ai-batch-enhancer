@@ -21,7 +21,8 @@ class Args:
         )
 
         parser.add_argument('input_path', type=str,)
-        parser.add_argument('--api_path', type=str, default="api.key",)
+        parser.add_argument('--api-path', type=str,
+                            default="api.key", dest="api_path")
         parser.add_argument('--scale', type=int, default=4, dest="scale",
                             help="Scale factor for the AI model")
         parser.add_argument('--output', type=str, help="Output path",
