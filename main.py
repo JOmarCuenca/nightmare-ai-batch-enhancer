@@ -1,8 +1,9 @@
+from loguru import logger
 from replicate import Client
+from requests import get
+
 from args import Args
 from fileManager import FileManager
-from requests import get
-from loguru import logger
 
 
 def __getKey(apiKeyPath: str):
@@ -39,6 +40,7 @@ def downloadImage(url: str, path: str):
 if __name__ == '__main__':
     from datetime import datetime
 
+    from tqdm import tqdm
 
     args = Args.getArgs()
     inputFM = FileManager(args.inputPath)
@@ -50,22 +52,22 @@ if __name__ == '__main__':
     client = getClient(args.apiKeyPath)
 
     nameGenerator = outputFM.getNextValidName(
-                    FileManager.getExtension("output.png"))
+        FileManager.getExtension("output.png"))
 
-    for img in imgs:
+    for img in tqdm(imgs):
         try:
             logger.debug(f"Processing -> {img}")
 
             # Enhance the image
-            # output = enhanceImage(
-            #     client, img, args.scale, args.face_enhance)
+            output = enhanceImage(
+                client, img, args.scale, args.face_enhance)
 
-            # __validateUrl(output)
+            __validateUrl(output)
 
             outputFilePath = next(nameGenerator)
 
-            # # Save the enhanced image
-            # downloadImage(output, outputFilePath)
+            # Save the enhanced image
+            downloadImage(output, outputFilePath)
 
             logger.debug(f"Saved enhanced image to {outputFilePath}")
 
