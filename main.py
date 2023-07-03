@@ -5,6 +5,9 @@ from requests import get
 from args import Args
 from fileManager import FileManager
 
+__REATEMPTS = 5
+__REATTEMPT_DELAY = 3 # seconds
+
 
 def __getKey(apiKeyPath: str):
     key = open(apiKeyPath, "r").read().strip()
@@ -42,9 +45,15 @@ if __name__ == '__main__':
 
     from tqdm import tqdm
 
+    from time import sleep
+
     args = Args.getArgs()
     inputFM = FileManager(args.inputPath)
     outputFM = FileManager(args.outputPath)
+
+    if not args.verbose:
+        logger.disable("__main__")
+
 
     logger.add(f"logs/{datetime.now().strftime('%d-%m-%y_%H:%M:%S')}.log")
 
@@ -58,11 +67,27 @@ if __name__ == '__main__':
         try:
             logger.debug(f"Processing -> {img}")
 
-            # Enhance the image
-            output = enhanceImage(
-                client, img, args.scale, args.face_enhance)
+            counter = 0
 
-            __validateUrl(output)
+            success = False
+
+            while not success and counter < __REATEMPTS:
+                try:
+                    # Enhance the image
+                    output = enhanceImage(
+                        client, img, args.scale, args.face_enhance)
+
+                    __validateUrl(output)
+                    success = True
+                except Exception as e:
+                    logger.error(
+                        '\n'.join([f"Failed to enhance {img} because of {e}", f"Retrying... {counter + 1}/3", f"URL: {output}"]))
+                    counter += 1
+                    sleep(__REATTEMPT_DELAY)
+
+            if not success and counter == __REATEMPTS:
+                raise Exception(
+                    f"Failed to enhance {img} after {counter} attempts, aborting...")
 
             outputFilePath = next(nameGenerator)
 
@@ -77,4 +102,7 @@ if __name__ == '__main__':
 
         logger.debug(f" Finished processing {img} ".center(100, '-') + '')
 
+    logger.enable("__main__")
+
     logger.info(f"Enhanced {len(imgs)} images")
+    logger.info("Done!")
