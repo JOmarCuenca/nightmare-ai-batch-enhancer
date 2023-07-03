@@ -29,7 +29,6 @@ class FileManager:
         return extension in FileManager.__VALID_EXTENSIONS
 
     def getNextValidName(self, extension):
-        
 
         while True:
             path = ""
@@ -41,8 +40,7 @@ class FileManager:
 
             if (not os.path.exists(path)):
                 yield path
-            else:
-                self.counter += 1
+            self.counter += 1
 
     def getImagesDirs(self):
         assert self.isDir(), "Path is not a directory"

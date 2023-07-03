@@ -6,7 +6,7 @@ from args import Args
 from fileManager import FileManager
 
 __REATEMPTS = 5
-__REATTEMPT_DELAY = 3 # seconds
+__REATTEMPT_DELAY = 3  # seconds
 
 
 def __getKey(apiKeyPath: str):
@@ -40,12 +40,55 @@ def downloadImage(url: str, path: str):
         file.write(response.content)
 
 
+def __downloadImage(img_path: tuple[str, str]):
+    from time import sleep
+
+    img, outputFilePath = img_path
+
+    try:
+        logger.debug(f"Processing -> {img}")
+
+        counter = 0
+
+        success = False
+
+        while not success and counter < __REATEMPTS:
+            try:
+                # Enhance the image
+                output = enhanceImage(
+                    client, img, args.scale, args.face_enhance)
+
+                __validateUrl(output)
+                success = True
+            except Exception as e:
+                logger.error(
+                    '\n'.join([f"Failed to enhance {img} because of {e}", f"Retrying... {counter + 1}/{__REATEMPTS}", f"URL: {output}"]))
+                counter += 1
+                sleep(__REATTEMPT_DELAY)
+
+        if not success and counter == __REATEMPTS:
+            raise Exception(
+                f"Failed to enhance {img} after {counter} attempts, aborting...")
+
+        # Save the enhanced image
+        downloadImage(output, outputFilePath)
+
+        logger.debug(f"Saved enhanced image to {outputFilePath}")
+
+    except Exception as e:
+        # Log the failure
+        logger.error(f"Failed to enhance {img} because of {e}")
+
+    logger.debug(f" Finished processing {img} ".center(100, '-') + '')
+
+
 if __name__ == '__main__':
     from datetime import datetime
+    from multiprocessing import Pool
 
     from tqdm import tqdm
 
-    from time import sleep
+    __THREAD_POOL_SIZE = 4
 
     args = Args.getArgs()
     inputFM = FileManager(args.inputPath)
@@ -53,7 +96,6 @@ if __name__ == '__main__':
 
     if not args.verbose:
         logger.disable("__main__")
-
 
     logger.add(f"logs/{datetime.now().strftime('%d-%m-%y_%H:%M:%S')}.log")
 
@@ -63,44 +105,10 @@ if __name__ == '__main__':
     nameGenerator = outputFM.getNextValidName(
         FileManager.getExtension("output.png"))
 
-    for img in tqdm(imgs):
-        try:
-            logger.debug(f"Processing -> {img}")
+    imgs_paths = zip(imgs, [next(nameGenerator) for _ in range(len(imgs))])
 
-            counter = 0
-
-            success = False
-
-            while not success and counter < __REATEMPTS:
-                try:
-                    # Enhance the image
-                    output = enhanceImage(
-                        client, img, args.scale, args.face_enhance)
-
-                    __validateUrl(output)
-                    success = True
-                except Exception as e:
-                    logger.error(
-                        '\n'.join([f"Failed to enhance {img} because of {e}", f"Retrying... {counter + 1}/3", f"URL: {output}"]))
-                    counter += 1
-                    sleep(__REATTEMPT_DELAY)
-
-            if not success and counter == __REATEMPTS:
-                raise Exception(
-                    f"Failed to enhance {img} after {counter} attempts, aborting...")
-
-            outputFilePath = next(nameGenerator)
-
-            # Save the enhanced image
-            downloadImage(output, outputFilePath)
-
-            logger.debug(f"Saved enhanced image to {outputFilePath}")
-
-        except Exception as e:
-            # Log the failure
-            logger.error(f"Failed to enhance {img} because of {e}")
-
-        logger.debug(f" Finished processing {img} ".center(100, '-') + '')
+    with Pool(__THREAD_POOL_SIZE) as p:
+        list(tqdm(p.imap(__downloadImage, imgs_paths), total=len(imgs)))
 
     logger.enable("__main__")
 
