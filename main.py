@@ -1,3 +1,5 @@
+#!/home/omarcuenca/Coding/ai/image_enhancer/env/bin/python3
+
 from loguru import logger
 from replicate import Client
 from requests import get
